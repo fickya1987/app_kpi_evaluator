@@ -18,20 +18,27 @@ if uploaded_file:
     # Filter data yang lengkap dan valid
     df = df.dropna(subset=["BOBOT", "TARGET TW TERKAIT", "REALISASI TW TERKAIT", "POLARITAS", "NAMA KPI"])
     df = df.copy()
-    
+
     # Pastikan numeric
     df["TARGET TW TERKAIT"] = pd.to_numeric(df["TARGET TW TERKAIT"], errors="coerce")
     df["REALISASI TW TERKAIT"] = pd.to_numeric(df["REALISASI TW TERKAIT"], errors="coerce")
     df["BOBOT"] = pd.to_numeric(df["BOBOT"], errors="coerce")
 
-    # Hitung capaian berdasarkan polaritas
+    # Hitung capaian berdasarkan polaritas (dengan perlindungan terhadap pembagian nol)
     def hitung_capaian(row):
-        if row["POLARITAS"].strip().lower() == "positif":
-            return (row["REALISASI TW TERKAIT"] / row["TARGET TW TERKAIT"]) * 100
-        elif row["POLARITAS"].strip().lower() == "negatif":
-            return (row["TARGET TW TERKAIT"] / row["REALISASI TW TERKAIT"]) * 100
+        target = row["TARGET TW TERKAIT"]
+        realisasi = row["REALISASI TW TERKAIT"]
+        polaritas = row["POLARITAS"].strip().lower()
+
+        if target == 0 or (polaritas == "negatif" and realisasi == 0):
+            return 0
+
+        if polaritas == "positif":
+            return (realisasi / target) * 100
+        elif polaritas == "negatif":
+            return (target / realisasi) * 100
         else:
-            return 100  # default netral
+            return 100  # netral atau tidak ditentukan
 
     df["CAPAIAN (%)"] = df.apply(hitung_capaian, axis=1)
     df["SKOR TERTIMBANG"] = df["CAPAIAN (%)"] * df["BOBOT"] / 100
@@ -79,7 +86,8 @@ if uploaded_file:
     st.download_button(
         label="📥 Unduh Hasil Evaluasi (Excel)",
         data=output.getvalue(),
-        file_name="hasil_evaluasi_kpi.csv",
+        file_name="hasil_evaluasi_kpi.xlsx",
         mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
     )
+
 
