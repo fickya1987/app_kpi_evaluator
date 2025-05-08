@@ -67,11 +67,17 @@ if uploaded_file:
     st.metric("Final Skor", f"{final_score:.2f}")
     st.metric("Kategori", kategori)
 
-    # Pie chart aman
+    # Pie chart aman dan label kecil
     df_pie = df_posisi[df_posisi["SKOR TERTIMBANG"] > 0].copy()
     if not df_pie.empty:
         fig, ax = plt.subplots()
-        ax.pie(df_pie["SKOR TERTIMBANG"], labels=df_pie["NAMA KPI"], autopct='%1.1f%%', startangle=90)
+        ax.pie(
+            df_pie["SKOR TERTIMBANG"],
+            labels=df_pie["NAMA KPI"],
+            autopct='%1.1f%%',
+            startangle=90,
+            textprops={'fontsize': 8}
+        )
         ax.axis("equal")
         st.pyplot(fig)
     else:
